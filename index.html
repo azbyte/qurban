@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Berqurban Bersama UNP Peduli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral with Green Accent -->
+    <!-- Application Structure Plan: Menggunakan pendekatan Single-Page Application (SPA) dengan struktur berbasis peran. Terdapat tiga tampilan utama yang dikelola oleh JavaScript: 1) Halaman Utama/Dasbor sebagai titik masuk, 2) Formulir Pendaftaran untuk Peserta, dan 3) Dasbor Admin untuk Penggajian (Input Potongan & Laporan). Struktur ini dipilih karena memisahkan alur kerja dua pengguna utama (Peserta vs. Admin) secara logis, menciptakan pengalaman yang fokus dan tidak membingungkan. Navigasi berbasis tombol yang sederhana membuat alur pengguna menjadi intuitif, memungkinkan akses cepat ke fungsi yang relevan tanpa memuat ulang halaman, yang sangat penting untuk usabilitas. -->
+    <!-- Visualization & Content Choices: 1. Dasbor Utama: (Tujuan: Menginformasikan) Menggunakan kartu statistik (total peserta, dana terkumpul) untuk menyajikan data kunci secara ringkas. 2. Formulir: (Tujuan: Mengorganisir Input) Formulir HTML standar dengan validasi JS untuk pendaftaran dan input potongan. 3. Laporan Admin: (Tujuan: Menganalisis & Membandingkan) Menggabungkan kartu ringkasan, tabel data terperinci untuk semua peserta, dan grafik batang (Chart.js) untuk memvisualisasikan perbandingan kontribusi. Grafik memberikan wawasan visual yang cepat, sementara tabel menyediakan detail lengkap. Pilihan ini secara efektif menerjemahkan semua persyaratan laporan ke dalam format yang interaktif dan mudah dicerna, tanpa menggunakan SVG atau Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden-view { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-green-800">Berqurban Bersama UNP Peduli</h1>
+            <p class="text-lg text-gray-600 mt-2">Program Qurban Tahunan untuk Dosen dan Karyawan Universitas Negeri Padang</p>
+        </header>
+
+        <main id="main-content">
+
+            <!-- PAGE: HOME/DASHBOARD -->
+            <div id="page-home" class="animate-fade-in">
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-semibold text-gray-700">Selamat Datang di Portal Qurban UNP</h2>
+                        <p class="mt-2 text-gray-500">Platform ini dirancang untuk memudahkan proses pendaftaran dan pengelolaan dana Qurban bagi sivitas akademika UNP. Mari bersama-sama berbagi keberkahan.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center mb-10">
+                        <div class="bg-green-50 p-6 rounded-lg">
+                            <h3 class="text-4xl font-bold text-green-700" id="stats-total-peserta">0</h3>
+                            <p class="text-gray-600 mt-1">Total Peserta Terdaftar</p>
+                        </div>
+                        <div class="bg-green-50 p-6 rounded-lg">
+                            <h3 class="text-4xl font-bold text-green-700" id="stats-total-dana">Rp 0</h3>
+                            <p class="text-gray-600 mt-1">Total Dana Terkumpul (Estimasi)</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                        <button onclick="showPage('page-register')" class="w-full md:w-auto bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-300 shadow-md">
+                            Daftar Sebagai Peserta
+                        </button>
+                        <button onclick="showPage('page-admin-login')" class="w-full md:w-auto bg-gray-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-800 transition-colors duration-300 shadow-md">
+                            Login Admin Penggajian
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: REGISTER -->
+            <div id="page-register" class="hidden-view animate-fade-in">
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                    <h2 class="text-3xl font-semibold text-center text-gray-700 mb-6">Formulir Pendaftaran Peserta Qurban</h2>
+                    <p class="text-center text-gray-500 mb-8">Silakan isi data diri Anda dengan lengkap dan benar. Pendaftaran ini merupakan wujud niat Anda untuk berpartisipasi dalam program Qurban tahun 1447 H.</p>
+                    <form id="register-form" onsubmit="handleRegister(event)">
+                        <div class="space-y-6">
+                            <div>
+                                <label for="nama_peserta" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                                <input type="text" id="nama_peserta" name="nama_peserta" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="nip_nidn" class="block text-sm font-medium text-gray-700">NIP / NIDN</label>
+                                <input type="text" id="nip_nidn" name="nip_nidn" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                             <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" id="email" name="email" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="nomor_telepon" class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
+                                <input type="tel" id="nomor_telepon" name="nomor_telepon" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                             <div>
+                                <label for="alamat" class="block text-sm font-medium text-gray-700">Alamat</label>
+                                <textarea id="alamat" name="alamat" rows="3" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"></textarea>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="agreement" name="agreement" type="checkbox" required class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300 rounded">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="agreement" class="font-medium text-gray-700">Saya berniat ikut berqurban dan bersedia gajinya dipotong setiap bulan selama 1 tahun ke depan.</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 flex justify-between items-center">
+                             <button type="button" onclick="showPage('page-home')" class="text-gray-600 hover:text-gray-800 font-medium">← Kembali</button>
+                             <button type="submit" class="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-300 shadow-md">Daftar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- PAGE: ADMIN LOGIN -->
+            <div id="page-admin-login" class="hidden-view animate-fade-in">
+                <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+                     <h2 class="text-3xl font-semibold text-center text-gray-700 mb-6">Login Admin</h2>
+                     <p class="text-center text-gray-500 mb-8">Halaman ini khusus untuk Bagian Penggajian.</p>
+                     <form id="login-form" onsubmit="handleLogin(event)">
+                        <div class="space-y-6">
+                            <div>
+                                <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                                <input type="text" id="username" value="admin" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                                <input type="password" id="password" value="admin123" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                            </div>
+                        </div>
+                        <div class="mt-8 flex justify-between items-center">
+                            <button type="button" onclick="showPage('page-home')" class="text-gray-600 hover:text-gray-800 font-medium">← Kembali</button>
+                            <button type="submit" class="bg-gray-700 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors duration-300 shadow-md">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PAGE: ADMIN DASHBOARD -->
+            <div id="page-admin-dashboard" class="hidden-view animate-fade-in">
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                        <h2 class="text-3xl font-semibold text-gray-700">Dasbor Admin</h2>
+                        <button onclick="showPage('page-home')" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">Logout</button>
+                    </div>
+
+                    <!-- Admin Navigation -->
+                    <div class="mb-8 flex justify-center border-b">
+                        <button id="btn-input" onclick="showAdminTab('tab-input')" class="py-3 px-6 font-medium text-lg border-b-4 border-green-700 text-green-700">Input Potongan</button>
+                        <button id="btn-report" onclick="showAdminTab('tab-report')" class="py-3 px-6 font-medium text-lg text-gray-500 border-b-4 border-transparent hover:border-gray-300">Lihat Laporan</button>
+                    </div>
+
+                    <!-- Admin Tab: Input Potongan -->
+                    <div id="tab-input">
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-2">Input Data Potongan Gaji</h3>
+                        <p class="text-gray-500 mb-6">Pilih peserta dan masukkan total estimasi biaya Qurban untuk tahun 1447 H. Sistem akan menghitung potongan bulanan secara otomatis.</p>
+                        <form id="deduction-form" class="max-w-xl mx-auto" onsubmit="handleDeduction(event)">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="id_peserta" class="block text-sm font-medium text-gray-700">Pilih Peserta</label>
+                                    <select id="id_peserta" name="id_peserta" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"></select>
+                                </div>
+                                <div>
+                                    <label for="nilai_qurban_estimasi" class="block text-sm font-medium text-gray-700">Estimasi Nilai Nominal Qurban (Rp)</label>
+                                    <input type="number" id="nilai_qurban_estimasi" name="nilai_qurban_estimasi" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" oninput="calculateMonthly()">
+                                </div>
+                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700">Potongan Gaji Bulanan (Otomatis)</label>
+                                    <p id="monthly-deduction" class="mt-1 text-xl font-semibold text-green-700 bg-gray-100 p-3 rounded-md">Rp 0</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-right">
+                                <button type="submit" class="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-300 shadow-md">Simpan Data</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Admin Tab: Laporan -->
+                    <div id="tab-report" class="hidden-view">
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-2">Laporan Peserta Qurban 1447 H</h3>
+                        <p class="text-gray-500 mb-6">Laporan ini menampilkan rincian biaya potongan untuk setiap peserta dan total keseluruhan dana yang terkumpul.</p>
+                        
+                        <div class="chart-container mb-10">
+                            <canvas id="reportChart"></canvas>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Peserta</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIP/NIDN</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Potongan (1 Tahun)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-table-body" class="divide-y divide-gray-200">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-gray-200 font-bold">
+                                        <td colspan="3" class="px-6 py-4 text-right text-sm text-gray-700">TOTAL KESELURUHAN</td>
+                                        <td id="report-total" class="px-6 py-4 text-left text-sm text-gray-900">Rp 0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+             <!-- Modal -->
+            <div id="modal" class="hidden-view fixed z-10 inset-0 overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                    </div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div id="modal-icon-container" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"></h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500" id="modal-message"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button type="button" id="modal-button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
