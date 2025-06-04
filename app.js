@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost/UAS/api.php';
+const API_BASE_URL = 'response.json';
 
 let activePage = 'page-home';
 let reportChartInstance = null;
@@ -116,10 +116,10 @@ async function handleLogin(event) {
 
 async function fetchPeserta() {
     try {
-        const response = await fetch(`${API_BASE_URL}?path=peserta`);
+        const response = await fetch(API_BASE_URL);
         if (!response.ok) throw new Error('Network response was not ok');
-        const peserta = await response.json();
-        return peserta;
+        const data = await response.json();
+        return data.peserta || [];
     } catch (error) {
         showModal('Error', 'Gagal mengambil data peserta.', false);
         return [];
@@ -128,10 +128,10 @@ async function fetchPeserta() {
 
 async function fetchPotongan() {
     try {
-        const response = await fetch(`${API_BASE_URL}?path=potongan`);
+        const response = await fetch(API_BASE_URL);
         if (!response.ok) throw new Error('Network response was not ok');
-        const potongan = await response.json();
-        return potongan;
+        const data = await response.json();
+        return data.potongan || [];
     } catch (error) {
         showModal('Error', 'Gagal mengambil data potongan.', false);
         return [];

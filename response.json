@@ -1,1 +1,36 @@
-[]
+{
+  "peserta": [
+    {
+      "id": 1,
+      "nama_peserta": "Andi Saputra",
+      "nip_nidn": "1987654321",
+      "email": "andi@example.com",
+      "nomor_telepon": "081234567890",
+      "alamat": "Jl. Merdeka No. 1",
+      "tanggal_daftar": "2024-01-01"
+    },
+    {
+      "id": 2,
+      "nama_peserta": "Budi Santoso",
+      "nip_nidn": "1987654322",
+      "email": "budi@example.com",
+      "nomor_telepon": "081234567891",
+      "alamat": "Jl. Sudirman No. 2",
+      "tanggal_daftar": "2024-01-02"
+    }
+  ],
+  "potongan": [
+    {
+      "id": 1,
+      "id_peserta": 1,
+      "nilai_qurban_estimasi": 1200000,
+      "tanggal_input": "2024-02-01"
+    },
+    {
+      "id": 2,
+      "id_peserta": 2,
+      "nilai_qurban_estimasi": 1500000,
+      "tanggal_input": "2024-02-02"
+    }
+  ]
+}
